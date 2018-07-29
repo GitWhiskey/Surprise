@@ -1,41 +1,23 @@
 <template>
   <div class="layout">
-    <el-container>
-      <el-header height="86px">
-        <Topbar />
-      </el-header>
-      <el-main>Main</el-main>
-      <el-footer>Footer</el-footer>
-    </el-container>
+    <topbar />
+    <main-container />
   </div>
 </template>
 
 <script>
   // components
   import Topbar from './Topbar'
-  // data
-  import RequestService from '../../services/RequestService'
+  import MainContainer from './MainContainer'
 
   export default {
     name: 'Layout',
-    data () {
-      return {
-        questions: []
-      }
-    },
-    async mounted () {
-      this.questions = await RequestService.getQuestions()
-    },
     components: {
-      Topbar
+      Topbar, MainContainer
     }
   }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-
-  .el-header {
-    padding: 0;
-  }
 </style>
