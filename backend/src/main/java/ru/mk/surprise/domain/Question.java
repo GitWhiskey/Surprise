@@ -3,9 +3,7 @@ package ru.mk.surprise.domain;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.util.List;
 import java.util.Set;
 
@@ -19,6 +17,10 @@ public class Question {
     private Long id;
 
     private String questionText;
+
+    @ElementCollection
     private List<Tip> tips;
+
+    @ElementCollection
     private Set<String> answers;
 }

@@ -5,10 +5,11 @@ import lombok.Setter;
 
 import javax.persistence.Embeddable;
 
-@Embeddable
 @Getter
 @Setter
+@Embeddable
 public class Tip {
+
 
     private String tipText;
     private Boolean isUsed;
