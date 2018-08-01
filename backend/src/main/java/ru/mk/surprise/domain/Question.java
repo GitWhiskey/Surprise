@@ -16,6 +16,10 @@ public class Question {
     @GeneratedValue
     private Long id;
 
+    @Column(length = 2000)
+    private String story;
+
+    @Column(length = 500)
     private String questionText;
 
     @ElementCollection
@@ -23,4 +27,6 @@ public class Question {
 
     @ElementCollection
     private Set<String> answers;
+
+    private Boolean isPassed;
 }

@@ -1,25 +1,51 @@
 <template>
   <div class="game-block">
-    <div class="white-block games user white-block-v1" v-if="questions && currentQuestion.question">
+    <div class="white-block games user white-block-v1" v-if="questions && currentQuestion">
       <div class="progress">
-        <div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" :aria-valuenow="currentQuestion.index"
+        <div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar"
+             :aria-valuenow="currentQuestionIndex"
              aria-valuemin="0" :aria-valuemax="questions.length" :style="'width: ' + percentComplete">
           <div class="prize fa fa-trophy"></div>
         </div>
-        <div class="answered_questions_count"> {{ currentQuestion.index}} / {{ questions.length }} </div>
+        <div class="answered_questions_count"> {{ currentQuestionIndex }} / {{ questions.length }} </div>
       </div>
 
-      <div class="font-main font-bold font-tiny notice">Вопрос номер {{ currentQuestion.index + 1 }}:</div>
+      <div class="font-main font-bold font-tiny notice">Вопрос номер {{ currentQuestionIndex + 1 }}:</div>
       <div class="question_text">
-        {{ currentQuestion.question.questionText }}
-        </div>
-      <form accept-charset="UTF-8" class="edit_game" method="post">
-        <input id="answer" name="answer" placeholder="Введите свой ответ" type="text">
-        <div class="buttons">
-          <input class="btn btn-lg btn-success next-button button-style-1 mint" name="commit" type="submit" value="Далее">
-        </div>
-      </form>
+        <p>{{ currentQuestion.story }}</p>
+        <p><strong>{{ currentQuestion.questionText }}</strong></p>
+      </div>
+      <!-- TIPS -->
+      <div class="tips">
+        <div class="notice">{{ `Подсказки (осталось ${tipsLeft}):` }}</div>
+        <span v-for="(tip, index) in currentQuestion.tips" :key="index">
+          <div v-if="!tip.isUsed" class="tip unused">
+            <span>
+              <a class="use_tip" @click="openTip(index)">
+                <img alt="Tip black" src="../../assets/tip_black.png" />
+              </a>
+            </span>
+          </div>
+          <div class="tip used" v-else>
+            <img alt="Tip green" src="../../assets/tip_green.png">
+            <div class="tip-text">
+              <p>{{ tip.tipText }}</p>
+            </div>
+          </div>
+        </span>
+      </div>
+      <!-- TIPS END -->
     </div>
+    <form accept-charset="UTF-8"  class="edit_game" id="edit_game_5b621ba03635307a563f0200" method="post">
+      <input class="form-control button-style-1" id="answer" name="answer" placeholder="Введите свой ответ" type="text" v-model="answer">
+      <span v-show="answerIsWrong">
+          Неверный ответ
+        </span>
+      <div class="buttons">
+        <input class="button-style-1 mint send_answer" name="commit" type="submit" value="Ответить" @click.prevent="submitAnswer">
+        <a class="button-style-1 orange sos" href="https://questplanet.ru/sos">SOS</a>
+      </div>
+    </form>
   </div>
 </template>
 
@@ -32,25 +58,56 @@
     data () {
       return {
         questions: [],
-        currentQuestion: {
-          index: 0,
-          question: null
-        }
+        currentQuestion: null,
+        currentQuestionIndex: 0,
+        answer: null,
+        answerIsWrong: false
       }
     },
     computed: {
       percentComplete () {
-        return (this.currentQuestion.index / this.questions.length) * 100 + '%'
+        return (this.currentQuestionIndex / this.questions.length) * 100 + '%'
+      },
+      tipsLeft () {
+        return this.currentQuestion.tips.filter(t => !t.isUsed).length
       }
     },
     async mounted () {
       this.questions = await RequestService.getQuestions()
-      this.currentQuestion.question = this.questions[0]
+      this.currentQuestion = this.questions.find(q => !q.isPassed)
+      this.currentQuestionIndex = this.questions.findIndex(q => !q.isPassed)
+    },
+    methods: {
+      async openTip (tipIndex) {
+        this.currentQuestion.tips[tipIndex].isUsed = true
+        await RequestService.updateQuestion(this.currentQuestionIndex + 1, this.currentQuestion)
+      },
+      async submitAnswer () {
+        this.answerIsWrong = false
+
+        let answers = Array.from(this.currentQuestion.answers).map(a => a.toLowerCase())
+        if (answers.includes(this.answer.toLowerCase())) {
+          this.currentQuestion.isPassed = true
+          await RequestService.updateQuestion(this.currentQuestionIndex + 1, this.currentQuestion)
+          this.currentQuestionIndex++
+          this.currentQuestion = this.questions[this.currentQuestionIndex]
+        } else {
+          this.answerIsWrong = true
+        }
+      }
     }
   }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+  .game-block .notice {
+    border-bottom: 1px solid #eee;
+    margin-bottom: 20px;
+    text-align: left;
+  }
 
+  .question_text {
+    text-align: left;
+  }
 </style>
