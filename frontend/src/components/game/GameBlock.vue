@@ -1,5 +1,8 @@
 <template>
   <div class="game-block">
+    <span v-show="answerIsRight">
+      Правильно!
+    </span>
     <div class="white-block games user white-block-v1" v-if="questions && currentQuestion">
       <div class="progress">
         <div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar"
@@ -35,17 +38,17 @@
         </span>
       </div>
       <!-- TIPS END -->
-    </div>
-    <form accept-charset="UTF-8"  class="edit_game" id="edit_game_5b621ba03635307a563f0200" method="post">
-      <input class="form-control button-style-1" id="answer" name="answer" placeholder="Введите свой ответ" type="text" v-model="answer">
-      <span v-show="answerIsWrong">
+      <form accept-charset="UTF-8"  class="edit_game" id="edit_game_5b621ba03635307a563f0200" method="post" style="margin-top: 10px">
+        <input class="form-control button-style-1" id="answer" name="answer" placeholder="Введите свой ответ" type="text" v-model="answer">
+        <span v-show="answerIsWrong">
           Неверный ответ
         </span>
-      <div class="buttons">
-        <input class="button-style-1 mint send_answer" name="commit" type="submit" value="Ответить" @click.prevent="submitAnswer">
-        <a class="button-style-1 orange sos" href="https://questplanet.ru/sos">SOS</a>
-      </div>
-    </form>
+        <div class="buttons">
+          <input class="button-style-1 mint send_answer" name="commit" type="submit" value="Ответить" @click.prevent="submitAnswer">
+          <a class="button-style-1 orange sos" href="#" style="margin-left: 5px">SOS</a>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
@@ -61,7 +64,8 @@
         currentQuestion: null,
         currentQuestionIndex: 0,
         answer: null,
-        answerIsWrong: false
+        answerIsWrong: false,
+        answerIsRight: false
       }
     },
     computed: {
@@ -84,6 +88,7 @@
       },
       async submitAnswer () {
         this.answerIsWrong = false
+        this.answerIsRight = false
 
         let answers = Array.from(this.currentQuestion.answers).map(a => a.toLowerCase())
         if (answers.includes(this.answer.toLowerCase())) {
@@ -91,6 +96,7 @@
           await RequestService.updateQuestion(this.currentQuestionIndex + 1, this.currentQuestion)
           this.currentQuestionIndex++
           this.currentQuestion = this.questions[this.currentQuestionIndex]
+          this.answerIsRight = true
         } else {
           this.answerIsWrong = true
         }
