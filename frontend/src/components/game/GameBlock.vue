@@ -1,51 +1,57 @@
 <template>
   <div class="game-block">
-    <span v-show="answerIsRight">
+    <div class="rightAnswer" v-show="answerIsRight">
       Правильно!
-    </span>
+    </div>
     <div class="white-block games user white-block-v1" v-if="questions && currentQuestion">
       <div class="progress">
         <div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar"
              :aria-valuenow="currentQuestionIndex"
              aria-valuemin="0" :aria-valuemax="questions.length" :style="'width: ' + percentComplete">
-          <div class="prize fa fa-trophy"></div>
+          <img alt="Running man white" class="running_man" src="../../assets/running_man_white.png">
         </div>
+        <div class="finish-flag fa fa-flag-checkered fa-flip-horizontal"></div>
         <div class="answered_questions_count"> {{ currentQuestionIndex }} / {{ questions.length }} </div>
       </div>
 
       <div class="font-main font-bold font-tiny notice">Вопрос номер {{ currentQuestionIndex + 1 }}:</div>
       <div class="question_text">
         <p>{{ currentQuestion.story }}</p>
-        <p><strong>{{ currentQuestion.questionText }}</strong></p>
       </div>
-      <!-- TIPS -->
-      <div class="tips">
-        <div class="notice">{{ `Подсказки (осталось ${tipsLeft}):` }}</div>
-        <span v-for="(tip, index) in currentQuestion.tips" :key="index">
-          <div v-if="!tip.isUsed" class="tip unused">
-            <span>
-              <a class="use_tip" @click="openTip(index)">
-                <img alt="Tip black" src="../../assets/tip_black.png" />
-              </a>
-            </span>
-          </div>
-          <div class="tip used" v-else>
-            <img alt="Tip green" src="../../assets/tip_green.png">
-            <div class="tip-text">
-              <p>{{ tip.tipText }}</p>
+
+      <div v-if="!currentQuestion.noAnswerNeeded">
+        <div class="question_text">
+          <p><strong>{{ currentQuestion.questionText }}</strong></p>
+        </div>
+        <!-- TIPS -->
+        <div class="tips">
+          <div class="notice">{{ `Подсказки (осталось ${tipsLeft}):` }}</div>
+          <span v-for="(tip, index) in currentQuestion.tips" :key="index">
+            <div v-if="!tip.isUsed" class="tip unused">
+              <span>
+                <a class="use_tip" @click="openTip(index)">
+                  <img alt="Tip black" src="../../assets/tip_black.png" />
+                </a>
+              </span>
             </div>
-          </div>
-        </span>
+            <div class="tip used" v-else>
+              <img alt="Tip green" src="../../assets/tip_green.png">
+              <div class="tip-text">
+                <p>{{ tip.tipText }}</p>
+              </div>
+            </div>
+          </span>
+        </div>
       </div>
       <!-- TIPS END -->
       <form accept-charset="UTF-8"  class="edit_game" id="edit_game_5b621ba03635307a563f0200" method="post" style="margin-top: 10px">
-        <input class="form-control button-style-1" id="answer" name="answer" placeholder="Введите свой ответ" type="text" v-model="answer">
-        <span v-show="answerIsWrong">
+        <input class="form-control button-style-1" id="answer" name="answer" placeholder="Введите свой ответ" type="text" v-model="answer" v-if="!currentQuestion.noAnswerNeeded">
+        <div class="wrongAnswer" v-show="answerIsWrong">
           Неверный ответ
-        </span>
+        </div>
         <div class="buttons">
-          <input class="button-style-1 mint send_answer" name="commit" type="submit" value="Ответить" @click.prevent="submitAnswer">
-          <a class="button-style-1 orange sos" href="#" style="margin-left: 5px">SOS</a>
+          <input class="button-style-1 mint send_answer" name="commit" type="submit" :value="buttonName" @click.prevent="submitAnswer">
+          <a class="button-style-1 orange sos" href="#" style="margin-left: 5px" v-if="!currentQuestion.noAnswerNeeded">SOS</a>
         </div>
       </form>
     </div>
@@ -63,7 +69,7 @@
         questions: [],
         currentQuestion: null,
         currentQuestionIndex: 0,
-        answer: null,
+        answer: '',
         answerIsWrong: false,
         answerIsRight: false
       }
@@ -74,6 +80,9 @@
       },
       tipsLeft () {
         return this.currentQuestion.tips.filter(t => !t.isUsed).length
+      },
+      buttonName () {
+        return this.currentQuestion.noAnswerNeeded ? 'Далее' : 'Ответить'
       }
     },
     async mounted () {
@@ -90,15 +99,23 @@
         this.answerIsWrong = false
         this.answerIsRight = false
 
-        let answers = Array.from(this.currentQuestion.answers).map(a => a.toLowerCase())
-        if (answers.includes(this.answer.toLowerCase())) {
-          this.currentQuestion.isPassed = true
+        if (!this.currentQuestion.noAnswerNeeded) {
+          let answers = Array.from(this.currentQuestion.answers).map(a => a.toLowerCase())
+          if (answers.includes(this.answer.toLowerCase())) {
+            this.currentQuestion.isPassed = true
+            await RequestService.updateQuestion(this.currentQuestionIndex + 1, this.currentQuestion)
+            this.answer = ''
+            this.currentQuestionIndex++
+            this.currentQuestion = this.questions[this.currentQuestionIndex]
+            this.answerIsRight = true
+            scroll(0,0)
+          } else {
+            this.answerIsWrong = true
+          }
+        } else {
           await RequestService.updateQuestion(this.currentQuestionIndex + 1, this.currentQuestion)
           this.currentQuestionIndex++
           this.currentQuestion = this.questions[this.currentQuestionIndex]
-          this.answerIsRight = true
-        } else {
-          this.answerIsWrong = true
         }
       }
     }
@@ -115,5 +132,20 @@
 
   .question_text {
     text-align: left;
+  }
+
+  .wrongAnswer {
+    background: #a95c5a;
+    color: white;
+    padding: 5px 10px;
+    width: 100%;
+    margin: 10px auto;
+  }
+
+  .rightAnswer {
+    background: #608c1b;
+    padding: 10px 10px;
+    margin: 10px auto;
+    color: white;
   }
 </style>

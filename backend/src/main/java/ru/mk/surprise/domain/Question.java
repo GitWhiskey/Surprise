@@ -29,4 +29,5 @@ public class Question {
     private Set<String> answers;
 
     private Boolean isPassed;
+    private Boolean noAnswerNeeded;
 }
