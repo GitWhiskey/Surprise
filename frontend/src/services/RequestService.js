@@ -6,7 +6,7 @@ import axios from 'axios'
 export default {
 
   async getQuestions () {
-    const response = await axios.get('http://192.168.0.17:8081/api/questions', {
+    const response = await axios.get('api/questions', {
       timeout: 5000
     })
     return response.data._embedded.questions.map(q => {
@@ -17,7 +17,7 @@ export default {
 
 
   async updateQuestion (questionId, question) {
-    return axios.put(`http://localhost:8081/api/questions/${questionId}`, question, {
+    return axios.put(`api/questions/${questionId}`, question, {
       timeout: 5000
     })
   }
